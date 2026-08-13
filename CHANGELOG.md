@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-08-08
+
+### Added
+- **Evaluation harness** (`scripts/run-eval.py`) — automated Layers 1-3 evaluation with parameterized tutor/judge models
+- **gd-research evaluation report** — 5-direction systematic assessment (architecture, pedagogy, assessment validity, robustness, validation status)
+- **Evaluation Protocol v2.3** — 4-layer validation design with TVM maturity model
+
+### Changed
+- README fully rewritten in English with Chinese section switch
+- File structure documentation updated to reflect all 10 reference files and the scripts directory
+
+## [2.2.0] - 2026-08-07
+
+### Added
+- **Dual-Track Assessment** — Concept Track (Feynman) + Application Track (Performance Task) with SOLO/Bloom/DOK depth targets per stage
+- **Depth Framework** (`references/depth-framework.md`) — triple depth framework + spiral deepening + stretch goals
+- **Assembly Stage** — final integration task targeting SOLO Extended Abstract
+- **Learner Profile** (`references/learner-profile.md`) — persistent cross-session learner model with KST prerequisites and spaced review
+- **Expertise Calibration** — dynamic Novice/Intermediate/Advanced classification per stage (Kalyuga 2007)
+- **Retrieval Practice + Delayed Recall** — pre-stage recall questions + 1→2→4→8→16 day spaced review intervals
+- **API Accuracy Protocol (AAP)** (`references/api-accuracy-protocol.md`) — RED/YELLOW/GREEN risk classification with Context7 verification
+- **Mastery Scoring** (`references/mastery-scoring.md`) — confidence score framework
+- **Model Tiers** (`references/model-tiers.md`) — Tier 1/2/3 rule maps for different model capabilities
+
 ## [2.1.0] - 2026-07-27
 
 ### Added
