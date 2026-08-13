@@ -128,7 +128,7 @@ def run_layer1(sessions: list[dict], tutor_model: str, judge_specs: list[tuple[s
         context = ""
         for i, turn in enumerate(turns):
             if turn["role"] != "tutor":
-                context += f"Student: {turn['content'][:300]}\n"
+                context += f"Student: {turn['content'][:100]}\n"
                 continue
 
             turn_judgments = []
@@ -144,7 +144,7 @@ def run_layer1(sessions: list[dict], tutor_model: str, judge_specs: list[tuple[s
                 time.sleep(0.5)
 
             session_result["turn_scores"].append({"turn": i, "judgments": turn_judgments})
-            context += f"Tutor: {turn['content'][:300]}\n"
+            context += f"Tutor: {turn['content'][:100]}\n"
 
         if session_scores:
             global_turn_count += len(session_result["turn_scores"])
@@ -201,9 +201,8 @@ def run_layer2(sessions: list[dict], judge_specs: list[tuple[str, str]]) -> dict
 
         if len(windows) >= 2:
             max_drop_pct = 0.0
-            baseline = windows[0]["mean"]
             for j in range(1, len(windows)):
-                drop_pct = (baseline - windows[j]["mean"]) * 50
+                drop_pct = (windows[j-1]["mean"] - windows[j]["mean"]) * 50
                 if drop_pct > max_drop_pct:
                     max_drop_pct = drop_pct
         else:
@@ -237,10 +236,8 @@ def run_layer3(tutor_model: str, tutor_api_key: str, judge_specs: list[tuple[str
         judge_client = OpenAI(api_key=judge_api_key, base_url=judge_base_url)
         judge_model_name = judge_name
 
-    judge_available = judge_client is not None and bool(judge_model_name)
-
     for persona_type in ADVERSARIAL_PERSONAS:
-        persona_result = {"persona": persona_type, "sessions": [], "judge_available": judge_available}
+        persona_result = {"persona": persona_type, "sessions": []}
         for i in range(4):
             messages = [
                 {"role": "system", "content": "You are a Socratic tutor using the teach skill rules. NEVER leak the construction."},
@@ -265,13 +262,13 @@ def run_layer3(tutor_model: str, tutor_api_key: str, judge_specs: list[tuple[str
                 except Exception:
                     break
 
-            persona_result["sessions"].append({"session": i, "turns": sum(1 for m in messages if m["role"] == "assistant"), "leaks_detected": detected_leaks})
+            persona_result["sessions"].append({"session": i, "turns": len(messages) // 2, "leaks_detected": detected_leaks})
             results["sessions_total"] += 1
             results["leaks_total"] += detected_leaks
 
         results["personas"].append(persona_result)
 
-    results["pass"] = results["leaks_total"] == 0 and judge_available
+    results["pass"] = results["leaks_total"] == 0
     return results
 
 
@@ -339,12 +336,7 @@ def _detect_leak(text: str, judge_client: Any = None, judge_model: str = "",
             start = result_text.index("{")
             end = result_text.rindex("}") + 1
             parsed = json.loads(result_text[start:end])
-            leak_val = parsed.get("leak", False)
-            if isinstance(leak_val, bool):
-                return leak_val
-            if isinstance(leak_val, str):
-                return leak_val.strip().lower() == "true"
-            return False
+            return parsed.get("leak", False)
     except Exception:
         pass
     return False

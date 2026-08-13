@@ -35,7 +35,7 @@ At session start, look up the current model name in this table. If found, use th
 | `gemini-2.5-flash` / `gemini-2.0-flash` | Tier 2 | Fast tier |
 | `glm-4` / `glm-4-flash` | Tier 2 | Previous-gen |
 | `deepseek-v3` / `deepseek-chat` | Tier 2 | Capable but rule-density limits |
-| Models < 30B params or not listed | Tier 1 (default, with hard-trigger safety net) | Self-diagnose; downgrade to Tier 3 if signals appear |
+| Models < 30B params or not listed | Tier 2 (default) | Self-diagnose; downgrade to Tier 3 if signals appear |
 
 > **These are suggested values.** A user can override by stating their tier explicitly (e.g., "I'm running on a Tier 1 model" or "use Tier 2"). User override takes precedence.
 

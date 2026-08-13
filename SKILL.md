@@ -22,7 +22,7 @@ This skill assumes a **Tier 1** model (frontier-class). On weaker models the rul
 | **Tier 2** | Rules 1-5 + Pacing + Recovery | Motivation module, Metacognitive Tags, Curiosity Hooks |
 | **Tier 3** | Only 5 Core Rules + one-question + stage-gate | Everything above + Fading, Enrichment, Spaced Review |
 
-**Runtime hard triggers** (any tier): 3 consecutive turns missing state line, 3+ rules violated in one turn, Recovery collapsed to one level, or stage/Coverage miscounting → downgrade one tier immediately and announce "我检测到规则密度超载，切换到精简教学模式". Do NOT silently degrade.
+**Runtime hard triggers** (any tier): 2 consecutive turns missing state line, 3+ rules violated in one turn, Recovery collapsed to one level, or stage/Coverage miscounting → downgrade one tier immediately and announce "我检测到规则密度超载，切换到精简教学模式". Do NOT silently degrade.
 
 **Per-turn self-check (silent):** Leak? · One unknown? · Stage gated? · State logged? · Coverage checked? · **API verified?** · **Depth target on track?** · **streak/tier updated?** · **covered/uncovered list current?**
 
@@ -52,8 +52,6 @@ This skill assumes a **Tier 1** model (frontier-class). On weaker models the rul
 Warm one-line welcome, then ask ONE question: what do they want from this session? (Master a concept / produce a deliverable / prep for exam / explain to someone.)
 
 **Detect learning style** (if not already known from learner profile/memory): "你更喜欢先理解理论再动手，还是边做边学？" This determines whether to compress pacing (快节奏实操型) or run the full Socratic flow (深度理解型).
-
-**Detect gamification preference:** Watch for signals like "升级", "技能树", "BOSS", "成就" etc. If triggered, load `references/gamification.md` to determine whether to enable RPG mode for this learner.
 
 **Expertise Calibration (Stage 1 output):** After diagnosis, classify the learner's expertise level on this topic. This calibrates the Socratic density:
 - **Novice** (no mental model) → full Socratic scaffolding, more specific questions, slower pacing
@@ -322,7 +320,7 @@ Two triggers, both produce `~/.teach/<topic>-学习笔记.md`:
 
 Notes contain: 要点 (earned conclusions) / 行家做法 (shared idioms) / 复习建议 (grounded in 观察) / 进阶建议 (next steps). See `references/session-mgmt.md` for format.
 
-**Gamification (optional):** If the learner opted into RPG mode, settle XP at stage boundaries (+50 Feynman, +100 Performance Task, +200 Assembly BOSS), update level/progress bar, and generate a Daily Quest (3 questions, md format) at wrap-up. XP/level persist to learner-profile. All rules in `references/gamification.md`. XP 结算时如需查 streak/tier 状态，参见 `references/mastery-scoring.md`.
+**Gamification (optional):** If the learner opted into RPG mode, settle XP at stage boundaries (+50 Feynman, +100 Performance Task, +200 Assembly BOSS), update level/progress bar, and generate a Daily Quest (3 questions, md format) at wrap-up. XP/level persist to learner-profile. All rules in `references/gamification.md`.
 
 **Learner Profile update (NEW):** At wrap-up, update `~/.teach/learner-profile.md`: add/update the topic row in 学习旅程, update 知识状态索引 with concept mastery (SOLO level) + last-practice date, record any API error corrections in 观察. Create the file if it doesn't exist. See `references/learner-profile.md`.
 
