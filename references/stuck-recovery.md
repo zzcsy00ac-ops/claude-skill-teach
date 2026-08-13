@@ -40,13 +40,10 @@ A fragment, a leading clue, or "你这里缺了一个关键信息：X" — witho
 
 **After recovery:** return to questioning. Still never reveal the whole answer.
 
-## Adaptive Escalation Rules
-
-These are automatic — the model should trigger them without the learner asking:
+## Speed Signals (auto-trigger)
 
 | Condition | Auto-action |
 |---|---|
-| *(Recovery routing now lives in SKILL.md → Signal Routing. This table only covers speed signals.)* | |
 | Learner says "太慢了" / "能快点吗" | Compress: shorter chains, fewer intermediate steps |
 | Learner answers 3 stages perfectly | Skip Recovery entirely for next stage; go straight to harder Hypothetical questions |
 

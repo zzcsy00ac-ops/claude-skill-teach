@@ -1,68 +1,91 @@
 # Mastery Confidence Score (掌握信心分)
 
-> 解决评估报告 `[三方确认]` 核心瓶颈：二元 pass/fail 信息损失大，无法区分"Relational但信心不足"vs"Relational且信心高"。
-> 基于 PFA 模型 (Pavlik, Cen & Koedinger 2009, AIED)、BKT (Corbett & Anderson 1995, UMUAI, 被引1351+)、
-> 不对称更新 (Nature Scientific Reports 2025)。
+> v3 版本：LLM 不做浮点心算。用整数 streak + 三档 tier 替代连续 p_mastery。
+> 理论依据不变：PFA 模型 (Pavlik, Cen & Koedinger 2009, AIED)、BKT (Corbett & Anderson 1995, UMUAI)、
+> 不对称更新（设计假设，未经独立验证）。
 
 ## 为什么需要概率化
 
-当前 Coverage Gate 和 Feynman Check 用二元判断（addressed/not, pass/fail）。BKT 文献证明：
-- 同一个"pass"可能来自真懂（P(mastered)=0.95）或运气猜对（P(mastered)=0.45）
-- 二元判断丢失这个关键信息 → 学习者模型 → 教学策略 → 课程序列全部降级
-- 对标 BKT：每个知识点维护 P(mastered) ∈ [0,1]，每次交互后贝叶斯更新
+Coverage Gate 和 Feynman Check 不能仅用二元 pass/fail——同一个"pass"可能来自真懂或运气猜对。
+用 streak（连续答对次数）+ tier（档位）替代浮点概率，LLM 只需计数，不做算术。
 
-## 简化方案：不对称启发式更新
+## 三档方案
 
-不实现完整 BKT 4参数模型，用确定性公式在 prompt 中描述为规则（LLM 负责信号提取，公式负责概率计算）：
+每个知识点维护两个值：
+- **streak**：连续独立答对次数（整数 + 半整数，初始 0）
+- **tier**：掌握档位（未掌握 / 掌握 / 巩固）
 
-```
-每个知识点维护: p_mastery ∈ [0, 1]（初始 0.15）
+### 档位与 streak 的映射
 
-答对（含 Feynman pass）:  p_mastery += 0.35 × (1 - p_mastery)   # 上升快
-答错（含 Recovery 触发）:  p_mastery -= 0.25 × p_mastery           # 下降慢
-Recovery L1-L5 加权失败:  L1=0.5次, L2=0.7次, L3=1次, L4=1.5次, L5=2次
-```
+| 档位 | streak 范围 | 语义 | 对应旧 p_mastery |
+|------|------------|------|-----------------|
+| 未掌握 | 0 - 2.5 | 仍在学习 | < 0.65 |
+| 掌握 | 3 - 4.5 | 能独立解释 | 0.65 - 0.85 |
+| 巩固 | ≥ 5 | 稳固、可迁移 | ≥ 0.85 |
 
-**不对称设计依据**: α⁺(0.35) > α⁻(0.25)——对未掌握内容高响应，对已掌握内容稳定 [Nature Scientific Reports 2025]。
+### 迁移规则
 
-**为什么不用 LLM 直接推理概率**: LLM 存在过度自信风险 (Xiong 2024)，确定性公式更可靠。LLM 只负责判断"答对了没有""用了哪级 Recovery"。
+| 当前档位 | 事件 | 迁移 | streak 变化 |
+|----------|------|------|------------|
+| 未掌握 | streak ≥ 3 | → 掌握 | 不重置 |
+| 掌握 | streak ≥ 5 | → 巩固 | 不重置 |
+| 巩固 | 答错 1 次 | → 掌握（降一级） | 归零 |
+| 掌握 | 答错 1 次 | → 未掌握（降一级） | 归零 |
+| 未掌握 | 答错 1 次 | 留在未掌握 | 归零 |
+
+**降档永远只降一级，不跳级。**
+
+**不对称设计说明：** 升档需 3 次连续答对，降档只需 1 次答错——但降档只降一级。
+保留原公式 α⁺(0.35) > α⁻(0.25) 的精神：上升快、下降慢。
+
+### Recovery 辅助折算
+
+| 辅助级别 | streak 更新 |
+|---------|------------|
+| 无辅助（独立正确） | +1 |
+| Recovery L1-L2 辅助后正确 | +0.5（两次辅助答对 = 一次独立答对） |
+| Recovery L3-L5 辅助后正确 | +0（提示太多不算掌握证据） |
+| 答错 / 盲猜 | 归零 + 降档 |
+
+### compress 模式例外（详见 SKILL.md Adaptive Pacing）
+
+当 compress 信号已触发（Advanced 学习者 / 连续答对 3+ stages / 学习者要求加速）：
+- item 掌握门槛降为：**1 次独立答对 = 当场 tier = 掌握**（无需 streak ≥ 3）
+- 理由：compress 信号本身是强掌握证据，单次正确的先验概率远高于普通学习者
+- 限制：仍不可跳过 Feynman（可 compressed 形式）；不可直接升到巩固
 
 ## 通过阈值
 
-| Gate | 旧规则 | 新规则（v3） |
-|------|--------|-------------|
-| Coverage Gate（每 item） | addressed = 被触及 → pass | p_mastery > 0.65 → item pass |
-| Feynman Check | correct + own words → pass | p_mastery > 0.70 + correct + own words |
+| Gate | 通过条件 |
+|------|---------|
+| Coverage Gate（每 item） | tier ≥ 掌握 |
+| Feynman Check | Coverage Gate 已通过 + Feynman 回答正确且用自己的话 |
 
-阈值选择理由：Bloom 标准化测验 80%→对话场景 0.65（考虑 LLM 评估噪声）。
+> Feynman teach-back 本身计为 +1 streak（判定前更新）。
+> 旧版 p_mastery > 0.65 / > 0.70 双阈值已废弃。
 
 ## 更新流程（每轮交互后）
 
 ```
-1. 判断学习者回应类型:
-   - 答对（独立推理正确）→ p_mastery += 0.35×(1-p_mastery)
-   - 答对但用了 Recovery L1-L2 → p_mastery += 0.15×(1-p_mastery)（弱上升）
-   - 答对但用了 Recovery L3-L5 → 不更新（提示太多不算掌握）
-   - 答错但有合理推理 → 不更新，标记 partial
-   - 盲猜/答错 → p_mastery -= 0.25×p_mastery
-
-2. 写入 Learner Profile 的知识状态索引（p_mastery + successes + failures + last_practice）
-3. Coverage Gate 检查时：所有 item 的 p_mastery > 0.65 才通过
+1. 判断回应类型，更新 streak（见 Recovery 辅助折算表）
+2. 如答错：streak 归零，触发降档（只降一级）
+3. 如答对：streak 增加，检查是否触发升档
+4. 写入 Learner Profile（streak + tier + successes + failures + last_practice）
+5. Coverage Gate 检查：所有 item tier ≥ 掌握？
 ```
 
 ## 在 Learner Profile 中的存储
 
 ```markdown
 ## 知识状态索引
-| 概念 | p_mastery | 成功 | 失败 | 上次练习 | 前置依赖 | 复习到期 |
-|------|-----------|------|------|----------|----------|----------|
-| goroutine | 0.72 | 3 | 1 | 2026-08-10 | — | 2026-08-18 |
-| channel | 0.85 | 4 | 0 | 2026-08-10 | goroutine | 2026-08-26 |
-| context | 0.38 | 1 | 2 | 2026-08-10 | goroutine | 2026-08-12 |
+| 概念 | tier | streak | 成功 | 失败 | 上次练习 | 前置依赖 | 复习到期 |
+|------|------|--------|------|------|----------|----------|----------|
+| goroutine | 掌握 | 3.5 | 4 | 1 | 2026-08-10 | — | 2026-08-18 |
+| channel | 巩固 | 6 | 6 | 0 | 2026-08-10 | goroutine | 2026-08-26 |
+| context | 未掌握 | 1 | 1 | 2 | 2026-08-10 | goroutine | 2026-08-12 |
 ```
 
 ## 长期方向
 
-v3 使用确定性启发式公式。未来可升级为：
-- BKT 贝叶斯更新（引入 P(T)/P(G)/P(S) 参数估计）
-- LLM-native KT（NTKT-style，Norris et al. 2025 证明 LLM 可直接做知识追踪）
+未来可升级为 BKT 贝叶斯更新或 LLM-native KT。
+当前离散化方案是 LLM 可靠执行的最大精度。

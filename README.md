@@ -273,11 +273,11 @@ Any agent that loads `SKILL.md` with YAML frontmatter and supports `references/`
 
 ## Roadmap
 
-- [ ] Mastery Confidence Score — probabilistic per-concept mastery (BKT-inspired, 0-1 scale)
+- [x] ~~Mastery Confidence Score~~ — **Implemented** (v2.2, `references/mastery-scoring.md`): tier/streak-based per-concept scoring
 - [ ] Structured Misconception Library — pre-built per-topic misconception sets (AutoTutor-style)
-- [ ] Interleaved Practice — mix concepts across stages (Desirable Difficulties)
+- [x] ~~Interleaved Practice~~ — **Implemented** (v2.2): Assembly Stage Mode 1 mixes concepts across stages
 - [ ] Pre-test / Post-test framework — quantifiable learning gain measurement
-- [ ] Performance Task Rubric — standardized SOLO-aligned scoring anchors
+- [x] ~~Performance Task Rubric~~ — **Implemented** (v2.2): Depth Gate + Performance Task with SOLO-aligned targets
 - [ ] Code execution sandbox — real-time coding exercises with automated feedback
 - [ ] Layer 4 Human Study — 6-12 learner pilot with control group (TVM-3 target)
 
