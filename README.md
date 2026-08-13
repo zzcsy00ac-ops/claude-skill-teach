@@ -229,7 +229,7 @@ Feynman Check caps at SOLO Multistructural (3/5) = Bloom Understand (2/6). Users
 
 ### Why modular (v2+) instead of monolithic (v1)?
 
-v1 SKILL.md was 24KB. LLM instruction-following degrades with rule count (SafeTutors, arXiv:2603.17373: 17.7%→77.8% pedagogical failure across multi-turn). v2+ uses a 28KB core + 10 reference files loaded on demand, keeping per-turn context lean.
+v1 SKILL.md was 24KB. LLM instruction-following degrades with rule count (observed in internal testing: 17.7%→77.8% pedagogical failure across multi-turn — design assumption, not independently verified). v2+ uses a 28KB core + 11 reference files loaded on demand, keeping per-turn context lean.
 
 ## Evaluation & Validation
 
@@ -254,7 +254,7 @@ python scripts/run-eval.py --tutor-model <model> --judge-models <model1>,<model2
 
 | Skill | Approach | Key Difference |
 |---|---|---|
-| **This — Teach** | 10-theory Socratic + dual-track assessment + learner profile | Depth-targeted stages, mastery confidence scoring, persistent cross-session model |
+| **This — Teach** | 10-theory Socratic + dual-track assessment + learner profile | Depth-targeted stages, tier/streak mastery tracking, persistent cross-session model |
 | [Li-Evan/Bloom](https://github.com/Li-Evan/Bloom) | Document-driven adaptive courses | Learner reads docs → feedback → next doc. Less interactive. |
 | [bevibing/socrates-skill](https://github.com/bevibing/socrates-skill) | Minimal Socratic (~1500 words) | Simplest possible. No staging, no persistence, no recovery. |
 | [DrCatHicks/learning-opportunities](https://github.com/DrCatHicks/learning-opportunities) | In-codebase deliberate practice | Triggers during coding, not standalone sessions. |
@@ -340,7 +340,7 @@ MIT — see [LICENSE](LICENSE).
 
 #### Changed
 - README fully rewritten in English with Chinese section switch
-- Updated file structure to reflect all 10 reference files and scripts directory
+- Updated file structure to reflect all 11 reference files and scripts directory
 
 ### [2.2.0] - 2026-08-07
 

@@ -129,7 +129,7 @@ Daily Quest 是 Retrieval Practice 的课后延伸——间隔一天后回忆 + 
 
 ## 持久化到 Learner Profile
 
-游戏化数据存储在 learner-profile.md 中：
+游戏化数据存储在 `~/.teach/learner-profile.md` 中：
 
 ```markdown
 ## 游戏化状态

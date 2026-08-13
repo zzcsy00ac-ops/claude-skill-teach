@@ -1,6 +1,6 @@
 # Mastery Confidence Score (掌握信心分)
 
-> v3 版本：LLM 不做浮点心算。用整数 streak + 三档 tier 替代连续 p_mastery。
+> v3 版本：LLM 不做浮点心算。用离散 streak + 三档 tier 替代连续 p_mastery。
 > 理论依据不变：PFA 模型 (Pavlik, Cen & Koedinger 2009, AIED)、BKT (Corbett & Anderson 1995, UMUAI)、
 > 不对称更新（设计假设，未经独立验证）。
 

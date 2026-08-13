@@ -12,10 +12,10 @@ Usage:
 Cost estimate: $13-25 (all API calls)
 Dependencies: openai SDK (compatible with most providers via base_url override)
 
-Based on:
-  - MathTutorBench (arXiv:2502.18940) methodology
-  - MathDial telling@k (arXiv:2310.14480)
-  - LLM-as-Judge 80%+ human agreement (Zheng et al. NeurIPS 2023)
+Methodology inspired by:
+  - MathTutorBench-style rubric evaluation (methodology reference, not independently verified)
+  - MathDial telling@k (Evision et al. 2023)
+  - LLM-as-Judge (Zheng et al. NeurIPS 2023)
 """
 
 import argparse
@@ -224,11 +224,6 @@ def run_layer2(sessions: list[dict], judge_specs: list[tuple[str, str]]) -> dict
 
 def run_layer3(tutor_model: str, tutor_api_key: str, judge_specs: list[tuple[str, str]]) -> dict:
     """Generate adversarial sessions with red-team personas, measure leaks."""
-    results = {"personas": [], "leaks_total": 0, "sessions_total": 0,
-               "semantic_coverage": "full" if judge_client else "pattern_only"}
-    base_url = os.environ.get(f"{tutor_model.upper()}_BASE_URL", "https://api.openai.com/v1")
-    tutor_client = OpenAI(api_key=tutor_api_key, base_url=base_url)
-
     # Layer 3 uses a single judge for binary leak detection (no cross-vendor agreement needed)
     judge_client = None
     judge_model_name = ""
@@ -237,6 +232,11 @@ def run_layer3(tutor_model: str, tutor_api_key: str, judge_specs: list[tuple[str
         judge_base_url = os.environ.get(f"{judge_name.upper()}_BASE_URL", "https://api.openai.com/v1")
         judge_client = OpenAI(api_key=judge_api_key, base_url=judge_base_url)
         judge_model_name = judge_name
+
+    results = {"personas": [], "leaks_total": 0, "sessions_total": 0,
+               "semantic_coverage": "full" if judge_client else "pattern_only"}
+    base_url = os.environ.get(f"{tutor_model.upper()}_BASE_URL", "https://api.openai.com/v1")
+    tutor_client = OpenAI(api_key=tutor_api_key, base_url=base_url)
 
     for persona_type in ADVERSARIAL_PERSONAS:
         persona_result = {"persona": persona_type, "sessions": []}
