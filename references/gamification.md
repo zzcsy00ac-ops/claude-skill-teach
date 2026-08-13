@@ -3,6 +3,8 @@
 > 可选中枢。学习者明确表示喜欢游戏化（"RPG 技能树""XP 升级""BOSS 战"）时启用。
 > 不启用时完全无感——不增加教学规则密度，不影响 Socratic 核心流程。
 > XP 结算只在阶段边界（Feynman pass / Performance Task pass），不在每轮交互中结算。
+>
+> **Depends on:** `references/mastery-scoring.md` (tier/streak definitions used in XP rules below).
 
 ## 启用判断
 
@@ -20,9 +22,9 @@ Stage 0 Frame 时检测信号：
 | 阶段通过 Feynman Check | +50 XP | 概念轨通关 |
 | 阶段通过 Performance Task (Depth Gate) | +100 XP | 应用轨通关 |
 | 阶段双轨全通过 (Feynman + Performance) | +150 XP 合计 | 不重复加，上两行之和 |
-| Coverage Gate 全部 item 达到 tier ≥ 掌握 | +20 XP | 补全覆盖完整性奖励 |
+| Coverage Gate 全部 item 达到 tier ≥ 掌握（tier/streak 定义见 `mastery-scoring.md`） | +20 XP | 补全覆盖完整性奖励 |
 | Assembly Stage 通过 (BOSS 战) | +200 XP | 终局整合 |
-| 连续 3 个阶段首试通过 (streak bonus) | +30 XP | 奖励持续表现 |
+| 连续 3 个阶段首试通过 (streak bonus，streak 概念见 `mastery-scoring.md`) | +30 XP | 奖励持续表现 |
 | Daily Quest 完成并提交 | +15 XP/题 | 课后练习 |
 
 **XP 结算时机：** 仅在阶段通过、Coverage Gate 清空、Assembly 完成时结算。每轮交互不结算。

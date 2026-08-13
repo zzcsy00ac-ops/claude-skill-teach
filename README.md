@@ -2,7 +2,7 @@
 
 > **Never tells. Always asks.** A comprehensive Socratic tutoring skill for Hermes Agent, Claude Code, Codex, Cursor, OpenCode, and any agent that supports `SKILL.md`.
 
-**Version 2.3.0** · MIT License · 2026-08-08
+**Version 2.4.0** · MIT License · 2026-08-13
 
 [中文版](#中文简介) · [中文变更日志](#变更日志)
 
@@ -61,7 +61,7 @@ Each stage declares a **depth target** using three frameworks: SOLO Taxonomy, Bl
 
 | Feature | Description |
 |---|---|
-| **Learner Profile** | Persistent cross-session file (`.teach-learner-profile.md`) — learning journey, knowledge state (SOLO per concept), spaced review schedule, API error log |
+| **Learner Profile** | Persistent cross-session file (`~/.teach/learner-profile.md`) — learning journey, knowledge state (SOLO per concept), spaced review schedule, API error log |
 | **Retrieval Practice** | Quick recall question before each new stage (Testing Effect, Roediger & Karpicke 2006) |
 | **Spaced Review** | 1→2→4→8→16 day interval on resume — reviews due concepts automatically |
 | **Spiral Return** | Later stages proactively bridge back to earlier concepts using new knowledge |
@@ -190,10 +190,11 @@ teach/
 │   ├── stuck-recovery.md              ← 6-level recovery + 5 questioning types + signal routing
 │   ├── depth-framework.md             ← SOLO/Bloom/DOK targets + dual-track assessment + performance tasks
 │   ├── enrichment.md                  ← Post-mastery craft upgrades: derivable vs conventional
+│   ├── gamification.md                ← Optional RPG mode: XP rules, level curves, Daily Quest
 │   ├── learner-profile.md             ← Cross-session learner model + KST prerequisites + spaced review
 │   ├── session-mgmt.md                ← Plan file format + notes + resume + state tracking
 │   ├── model-tiers.md                 ← Tier 1/2/3 rule map for different model capabilities
-│   ├── mastery-scoring.md             ← Mastery confidence score (0-1) update rules
+│   ├── mastery-scoring.md             ← Three-tier mastery tracking (streak/tier transition rules)
 │   └── evaluation-protocol.md         ← 4-layer validation protocol (rubric judge / long-conversation / adversarial / human study)
 └── scripts/
     └── run-eval.py                    ← Automated evaluation harness (Layers 1-3)

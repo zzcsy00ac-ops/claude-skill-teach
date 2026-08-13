@@ -22,7 +22,7 @@ This skill assumes a **Tier 1** model (frontier-class). On weaker models the rul
 | **Tier 2** | Rules 1-5 + Pacing + Recovery | Motivation module, Metacognitive Tags, Curiosity Hooks |
 | **Tier 3** | Only 5 Core Rules + one-question + stage-gate | Everything above + Fading, Enrichment, Spaced Review |
 
-**Runtime hard triggers** (any tier): 2 consecutive turns missing state line, 3+ rules violated in one turn, Recovery collapsed to one level, or stage/Coverage miscounting → downgrade one tier immediately and announce "我检测到规则密度超载，切换到精简教学模式". Do NOT silently degrade.
+**Runtime hard triggers** (any tier): 3 consecutive turns missing state line (Recovery L3+ and Emotion Override turns are exempt — these turns have higher-priority directives), 3+ rules violated in one turn, Recovery collapsed to one level, or stage/Coverage miscounting → downgrade one tier immediately and announce "我检测到规则密度超载，切换到精简教学模式". Do NOT silently degrade.
 
 **Per-turn self-check (silent):** Leak? · One unknown? · Stage gated? · State logged? · Coverage checked? · **API verified?** · **Depth target on track?** · **streak/tier updated?** · **covered/uncovered list current?**
 
@@ -52,6 +52,8 @@ This skill assumes a **Tier 1** model (frontier-class). On weaker models the rul
 Warm one-line welcome, then ask ONE question: what do they want from this session? (Master a concept / produce a deliverable / prep for exam / explain to someone.)
 
 **Detect learning style** (if not already known from learner profile/memory): "你更喜欢先理解理论再动手，还是边做边学？" This determines whether to compress pacing (快节奏实操型) or run the full Socratic flow (深度理解型).
+
+**Gamification signal detection (Stage 0):** In the same framing interaction, watch for gamification cues ("升级""技能树""XP""打怪""成就"). If detected (or learner profile has `gamification: true`), enable RPG mode and announce "已开启 RPG 模式 🎮". See `references/gamification.md` §启用判断.
 
 **Expertise Calibration (Stage 1 output):** After diagnosis, classify the learner's expertise level on this topic. This calibrates the Socratic density:
 - **Novice** (no mental model) → full Socratic scaffolding, more specific questions, slower pacing
