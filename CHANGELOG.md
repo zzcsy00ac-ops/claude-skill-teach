@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2026-08-13
+
+### Fixed
+- **P0-1: run-eval.py 三硬伤修复** — 分数污染（judge 模型看到 tutor 评分导致分数膨胀）、退化计算（layer 分数计算错误）、泄露检测（answer-aware 检测逻辑失效）三个关键 bug 修复
+- **P1-1: p_mastery 三档离散化** — 用 streak + tier 替代浮点心算，消除不可靠的浮点数 mastery 计算
+- **P1-2: compress 模式与 Coverage Gate 冲突裁决** — compress 模式跳过阶段时 Coverage Gate 误报覆盖不足的问题，明确 compress 优先于 gate
+- **P1-3: Learner Profile 固定路径** — 从相对路径改为 `~/.teach/` 固定路径，避免工作目录变化导致 profile 丢失
+- **P1-4: Tier 检测硬触发** — 用模型名映射表替代软启发式检测，确保 tier 分配确定性
+
+### Added
+- **P2-2+P2-3: RPG 游戏化系统** (`references/gamification.md`) — XP/等级/成就/连击系统 + Daily Quest 每日任务机制
+- **P2-5: 引文合规** — 将虚构的 arXiv/DOI 引用降级为设计假设标注，杜绝学术不端风险
+
+### Changed
+- **P2-1: 文档漂移统一收口** — README、SKILL.md、所有 references 文件中的版本号、路径、流程描述统一对齐
+
 ## [2.3.0] - 2026-08-08
 
 ### Added

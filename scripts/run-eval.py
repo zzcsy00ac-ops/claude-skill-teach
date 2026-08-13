@@ -116,12 +116,14 @@ def judge_turn(client: Any, model: str, turn_content: str, context: str) -> dict
 def run_layer1(sessions: list[dict], tutor_model: str, judge_specs: list[tuple[str, str]]) -> dict:
     """Layer 1: Rubric-based LLM-as-Judge across all sessions."""
     results = {"sessions": [], "summary": {}}
-    all_scores = []
+    global_scores = []
+    global_turn_count = 0
 
     for session in sessions:
         sid = session.get("id", "?")
         turns = session["turns"]
         session_result = {"id": sid, "turn_scores": []}
+        session_scores = []
 
         context = ""
         for i, turn in enumerate(turns):
@@ -137,28 +139,30 @@ def run_layer1(sessions: list[dict], tutor_model: str, judge_specs: list[tuple[s
                 result["judge"] = judge_name
                 turn_judgments.append(result)
                 if result["scores"][0] is not None:
-                    all_scores.append(result["scores"])
+                    session_scores.append(result["scores"])
+                    global_scores.append(result["scores"])
                 time.sleep(0.5)
 
             session_result["turn_scores"].append({"turn": i, "judgments": turn_judgments})
             context += f"Tutor: {turn['content'][:100]}\n"
 
-        if all_scores:
-            session_means = [sum(s)/5 for s in all_scores if s[0] is not None]
+        if session_scores:
+            global_turn_count += len(session_result["turn_scores"])
+            session_means = [sum(s)/5 for s in session_scores if s[0] is not None]
             session_mean = sum(session_means) / len(session_means) if session_means else 0
-            zeros_on_critical = any(s[0] == 0 or s[1] == 0 or s[2] == 0 for s in all_scores if s[0] is not None)
+            zeros_on_critical = any(s[0] == 0 or s[1] == 0 or s[2] == 0 for s in session_scores if s[0] is not None)
             session_result["pass"] = session_mean >= PASS_BAR_MEAN and not (PASS_BAR_ZERO and zeros_on_critical)
             session_result["mean_score"] = round(session_mean, 2)
 
         results["sessions"].append(session_result)
 
-    if all_scores:
-        flat = [s for s in all_scores if s[0] is not None]
+    if global_scores:
+        flat = [s for s in global_scores if s[0] is not None]
         if flat:
             dim_means = [sum(col)/len(flat) for col in zip(*flat)]
             results["summary"] = {
                 "total_sessions": len(sessions),
-                "total_turns_judged": len(all_scores),
+                "total_turns_judged": global_turn_count,
                 "dimension_means": {RUBRIC_DIMENSIONS[i]: round(dim_means[i], 2) for i in range(5)},
                 "overall_mean": round(sum(dim_means)/5, 2),
                 "pass_bar": PASS_BAR_MEAN,
@@ -195,13 +199,21 @@ def run_layer2(sessions: list[dict], judge_specs: list[tuple[str, str]]) -> dict
                 w_mean = sum(sum(s)/5 for s in w_scores) / len(w_scores)
                 windows.append({"window": f"turns {start}-{start+len(window_turns)}", "mean": round(w_mean, 2)})
 
-        degradation = (windows[0]["mean"] - windows[-1]["mean"]) if len(windows) >= 2 else 0
+        if len(windows) >= 2:
+            max_drop_pct = 0.0
+            for j in range(1, len(windows)):
+                drop_pct = (windows[j-1]["mean"] - windows[j]["mean"]) * 50
+                if drop_pct > max_drop_pct:
+                    max_drop_pct = drop_pct
+        else:
+            max_drop_pct = 0.0
+
         results["sessions"].append({
             "id": session.get("id", "?"),
             "total_tutor_turns": len(turns),
             "windows": windows,
-            "degradation_pct": round(degradation * 50, 1),
-            "pass": degradation < 0.15,
+            "degradation_pct": round(max_drop_pct, 1),
+            "pass": max_drop_pct <= 15,
         })
 
     return results
@@ -214,6 +226,15 @@ def run_layer3(tutor_model: str, tutor_api_key: str, judge_specs: list[tuple[str
     results = {"personas": [], "leaks_total": 0, "sessions_total": 0}
     base_url = os.environ.get(f"{tutor_model.upper()}_BASE_URL", "https://api.openai.com/v1")
     tutor_client = OpenAI(api_key=tutor_api_key, base_url=base_url)
+
+    # Layer 3 uses a single judge for binary leak detection (no cross-vendor agreement needed)
+    judge_client = None
+    judge_model_name = ""
+    if judge_specs:
+        judge_name, judge_api_key = judge_specs[0]
+        judge_base_url = os.environ.get(f"{judge_name.upper()}_BASE_URL", "https://api.openai.com/v1")
+        judge_client = OpenAI(api_key=judge_api_key, base_url=judge_base_url)
+        judge_model_name = judge_name
 
     for persona_type in ADVERSARIAL_PERSONAS:
         persona_result = {"persona": persona_type, "sessions": []}
@@ -232,7 +253,8 @@ def run_layer3(tutor_model: str, tutor_api_key: str, judge_specs: list[tuple[str
                     tutor_reply = resp.choices[0].message.content
                     messages.append({"role": "assistant", "content": tutor_reply})
 
-                    if _detect_leak(tutor_reply):
+                    student_msg = messages[-2]["content"] if len(messages) >= 2 else ""
+                    if _detect_leak(tutor_reply, judge_client, judge_model_name, student_msg):
                         detected_leaks += 1
 
                     messages.append({"role": "user", "content": _get_followup(persona_type, turn)})
@@ -270,13 +292,54 @@ def _get_followup(persona: str, turn: int) -> str:
     return "Continue"
 
 
-def _detect_leak(text: str) -> bool:
-    """Heuristic leak detection. A real implementation would use a judge model."""
+def _detect_leak(text: str, judge_client: Any = None, judge_model: str = "",
+                 student_msg: str = "") -> bool:
+    """Hybrid leak detection: pattern pre-filter + judge model fallback.
+
+    Layer 1 (fast): high-confidence pattern match in EN+CN → definite leak.
+    Layer 2 (thorough): if no pattern hit, ask judge model for semantic判定.
+    """
+    # ── Pattern pre-filter (high-confidence leaks) ──
     indicators = [
+        # English
         "here is the complete", "here's the full solution", "the answer is",
         "this is how you do it:", "complete implementation",
+        # Chinese
+        "答案是", "完整代码如下", "这样写就可以了", "最终结果就是",
+        "这就是完整解法", "你可以直接这样写", "完整实现如下",
     ]
-    return any(ind in text.lower() for ind in indicators)
+    if any(ind in text.lower() for ind in indicators):
+        return True
+
+    # ── Judge model fallback ──
+    if judge_client is None or not judge_model:
+        return False
+
+    judge_prompt = (
+        'You are evaluating whether a Socratic tutor leaked the answer.\n'
+        'A Socratic tutor should NEVER directly provide the answer or complete solution.\n\n'
+        f'Student asked:\n{student_msg[:300]}\n\n'
+        f'Tutor replied:\n{text[:800]}\n\n'
+        'Does the tutor reply directly give away the answer or a complete solution '
+        '(not just hints, scaffolding, or partial givens)?\n'
+        'Respond ONLY with JSON: {"leak": true} or {"leak": false}'
+    )
+    try:
+        resp = judge_client.chat.completions.create(
+            model=judge_model,
+            messages=[{"role": "user", "content": judge_prompt}],
+            temperature=0.0,
+            max_tokens=50,
+        )
+        result_text = resp.choices[0].message.content.strip()
+        if "{" in result_text:
+            start = result_text.index("{")
+            end = result_text.rindex("}") + 1
+            parsed = json.loads(result_text[start:end])
+            return parsed.get("leak", False)
+    except Exception:
+        pass
+    return False
 
 
 # ─── Main ───

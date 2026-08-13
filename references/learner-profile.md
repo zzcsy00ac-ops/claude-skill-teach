@@ -2,11 +2,17 @@
 
 > 解决"单会话局限"——当前 plan file 是孤立的，没有跨 topic 的长期学习轨迹。
 > 基于 KST "准备学习"概念（Doignon & Falmagne 1999）、开放学习者模型 OLM（Bull 2020）、
-> LIGHT 三层记忆（arXiv:2510.27246）。
+> 三层记忆架构（设计假设，未经独立验证）。
 
 ## 档案文件
 
-**位置：** `./.teach-learner-profile.md`（跟 plan file 同目录，即 cwd）
+**位置（查找顺序）：**
+1. `~/.teach/learner-profile.md`（全局固定，首选）
+2. `./.teach-learner-profile.md`（cwd 兜底，兼容旧版）
+
+首次创建时写入路径 ①。若路径 ② 已存在（旧版数据），读取后迁移到路径 ① 并告知用户。
+
+**目录创建：** 首次使用时自动 `mkdir -p ~/.teach/`。
 
 **创建时机：** 第一次 `/teach` 时创建。之后每次 `/teach`（无参数或有参数）都先读取。
 
@@ -24,15 +30,15 @@
 | 2026-08-07 | Go并发 | 3/4 完成 | Relational | goroutine/channel 掌握好，context 概念模糊 |
 
 ## 知识状态索引（概念 → 掌握度）
-| 概念 | p_mastery | SOLO层级 | 上次练习 | 前置依赖 | 复习到期 |
-|------|-----------|---------|----------|----------|----------|
-| goroutine | 0.72 | Relational | 2026-08-07 | — | 2026-08-15 |
-| channel | 0.85 | Relational | 2026-08-07 | goroutine | 2026-08-15 |
-| context | 0.38 | Unistructural | 2026-08-07 | goroutine | 2026-08-09 |
+| 概念 | tier | streak | SOLO层级 | 上次练习 | 前置依赖 | 复习到期 |
+|------|------|--------|---------|----------|----------|----------|
+| goroutine | 掌握 | 3.5 | Relational | 2026-08-07 | — | 2026-08-15 |
+| channel | 巩固 | 6 | Relational | 2026-08-07 | goroutine | 2026-08-15 |
+| context | 未掌握 | 1 | Unistructural | 2026-08-07 | goroutine | 2026-08-09 |
 
-> **p_mastery** (v3新增): 0-1 概率化掌握度，基于不对称启发式更新。详见 `references/mastery-scoring.md`。
-> 答对: p += 0.35×(1-p) · 答错: p -= 0.25×p · Recovery L3+答对不更新。
-> Coverage Gate item 通过条件: p_mastery > 0.65。Feynman 通过条件: p_mastery > 0.70。
+> **tier/streak** (v3): 三档离散化掌握度。详见 `references/mastery-scoring.md`。
+> 独立答对 streak +1 · Recovery L1-2 辅助 +0.5 · 答错归零+降档
+> Coverage Gate 通过条件: tier ≥ 掌握。compress 模式例外见 SKILL.md。
 
 ## 跨 Topic 关联
 - Go并发 → [依赖] Go基础语法
@@ -83,8 +89,8 @@
 
 ## 与 Plan File 的关系
 
-- **Plan file** = 单次学习计划（topic 级别，临时）
-- **Learner Profile** = 跨 topic 持久层（学习者级别，长期）
+- **Plan file** = 单次学习计划（topic 级别，临时）— 位于 `~/.teach/{topic}-plan.md`
+- **Learner Profile** = 跨 topic 持久层（学习者级别，长期）— 位于 `~/.teach/learner-profile.md`
 - Plan file 的进度日志在会话结束时**同步**到 Learner Profile 的学习旅程表
 - Learner Profile 不替代 plan file——它是 plan file 之上的一层
 

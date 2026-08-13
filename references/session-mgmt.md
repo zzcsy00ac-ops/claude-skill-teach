@@ -2,7 +2,7 @@
 
 ## Plan File Format
 
-**Filename rule:** lowercase topic, join words with single hyphens. `Python 装饰器` → `./python-装饰器-learning-plan.md`. CJK topics with no spaces stay unchanged: `量子叠加` → `./量子叠加-learning-plan.md`.
+**Filename rule:** lowercase topic, join words with single hyphens. Stored in `~/.teach/`. `Python 装饰器` → `~/.teach/python-装饰器-plan.md`. CJK topics with no spaces stay unchanged: `量子叠加` → `~/.teach/量子叠加-plan.md`. If `~/.teach/` doesn't exist, create it (`mkdir -p ~/.teach/`).
 
 ```markdown
 # 学习计划：<topic>
@@ -34,7 +34,7 @@
 
 **Trigger:** either (a) last stage passes Feynman, or (b) learner says "今天先到这 / 下课 / 改天继续".
 
-**Filename:** same derivation as plan, suffix `-学习笔记.md`.
+**Filename:** same derivation as plan, suffix `-学习笔记.md`, stored in `~/.teach/`.
 
 ```markdown
 # 学习笔记：<topic>
@@ -91,10 +91,10 @@ This prevents the "learned and forgot" gap across sessions.
 
 ## Learner Profile Integration (NEW)
 
-The Learner Profile (`./.teach-learner-profile.md`) is a cross-topic persistent layer that sits above plan files. See `references/learner-profile.md` for full format and flow.
+The Learner Profile (`~/.teach/learner-profile.md`) is a cross-topic persistent layer that sits above plan files. See `references/learner-profile.md` for full format and flow.
 
 **At session start:**
-1. Read `./.teach-learner-profile.md` (create if missing).
+1. Read `~/.teach/learner-profile.md` (create if missing; `mkdir -p ~/.teach/` first).
 2. If `/teach` with no topic → show learning journey, ask continue or new.
 3. If `/teach <topic>` → run readiness check (prerequisites + due-for-review).
 
